@@ -1,0 +1,118 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='robots' content='noindex, nofollow'>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        h2, h3 {
+            margin: 10px;
+            font-size: 1.2em;
+        }
+        h3 {
+            font-size: 1em;
+        }
+        p {
+            font-size: 0.85em;
+            margin: 10px;
+            text-align: left;
+        }
+        .map-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.8);
+            margin-right: 20px;
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            border-radius: 3px;
+        }
+        #map {
+            position:absolute;
+            top:0;
+            bottom:0;
+            width:100%;
+        }
+        #features {
+            top: 0;
+            height: 70px;
+            margin-top: 20px;
+            width: 170px;
+        }
+        #legend {
+            padding: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+            line-height: 18px;
+            height: 60px;
+            margin-bottom: 40px;
+            width: 100px;
+        }
+        .legend-key {
+            display:inline-block;
+            border-radius: 20%;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+	<div id='map'></div>
+	<div class='map-overlay' id='features'><h2>MQM Map Error</h2><div id='pd'><p>Hover over a polygon!</p></div></div>
+	<div class='map-overlay' id='legend'></div>
+
+<script>
+	
+	mapboxgl.accessToken = 'pk.eyJ1IjoiaG1pZGFhMjAwMiIsImEiOiJjanozcG93Y2QwNXVhM2xwOXZrb3E5azB2In0.9Xj8ORbAg0JTTLnvBeNCuA';
+
+	var map = new mapboxgl.Map({
+  		container: 'map',
+  		style: 'mapbox://styles/hmidaa2002/cjz3ni1566ght1cpdp4i3dn5t'
+  	});
+
+  	map.on('load', function() {
+
+  	// make a pointer cursor
+    map.getCanvas().style.cursor = 'default';
+
+	var layers = ['Low', 'Medium', 'High'];
+	var colors = ['#FFED9E', '#FD8B3a', '#BD0026'];
+
+	for (i = 0; i < layers.length; i++) {
+		  var layer = layers[i];
+		  var color = colors[i];
+		  var item = document.createElement('div');
+		  var key = document.createElement('span');
+		  key.className = 'legend-key';
+		  key.style.backgroundColor = color;
+
+		  var value = document.createElement('span');
+		  value.innerHTML = layer;
+		  item.appendChild(key);
+		  item.appendChild(value);
+		  legend.appendChild(item);
+	}
+
+	// change info window on hover
+    map.on('mousemove', function (e) {
+        var states = map.queryRenderedFeatures(e.point, {
+            layers: ['level-7-13-area-3-2gflt4']
+        });
+
+        if (states.length > 0) {
+            document.getElementById('pd').innerHTML = "<h3><p>" + states[0].properties.counts + " map errors</p>";
+        } else {
+            document.getElementById('pd').innerHTML = '<p>Hover over a polygon!</p>';
+        }
+    });
+	
+});
+</script>
+
+</body>
+</html>
