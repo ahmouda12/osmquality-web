@@ -5,114 +5,116 @@
     <meta name='robots' content='noindex, nofollow'>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <link rel="stylesheet" type="text/css" href="index.css">
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.css' rel='stylesheet' />
-    <style>
-        body { margin:0; padding:0; }
-        h2, h3 {
-            margin: 10px;
-            font-size: 1.2em;
-        }
-        h3 {
-            font-size: 1em;
-        }
-        p {
-            font-size: 0.85em;
-            margin: 10px;
-            text-align: left;
-        }
-        .map-overlay {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.8);
-            margin-right: 20px;
-            font-family: Arial, sans-serif;
-            overflow: auto;
-            border-radius: 3px;
-        }
-        #map {
-            position:absolute;
-            top:0;
-            bottom:0;
-            width:100%;
-        }
-        #features {
-            top: 0;
-            height: 70px;
-            margin-top: 20px;
-            width: 170px;
-        }
-        #legend {
-            padding: 10px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
-            line-height: 18px;
-            height: 60px;
-            margin-bottom: 40px;
-            width: 100px;
-        }
-        .legend-key {
-            display:inline-block;
-            border-radius: 20%;
-            width: 10px;
-            height: 10px;
-            margin-right: 5px;
-        }
-
-    </style>
 </head>
 <body>
 
-	<div id='map'></div>
-	<div class='map-overlay' id='features'><h2>MQM Map Error</h2><div id='pd'><p>Hover over a polygon!</p></div></div>
-	<div class='map-overlay' id='legend'></div>
+<div id='container'>
+    <div id='map'></div>
+    <div id='menu'></div>
+</div>
+<button id='fly'>Fly</button>
 
 <script>
-	
-	mapboxgl.accessToken = 'pk.eyJ1IjoiaG1pZGFhMjAwMiIsImEiOiJjanozcG93Y2QwNXVhM2xwOXZrb3E5azB2In0.9Xj8ORbAg0JTTLnvBeNCuA';
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaG1pZGFhMjAwMiIsImEiOiJjanozcG93Y2QwNXVhM2xwOXZrb3E5azB2In0.9Xj8ORbAg0JTTLnvBeNCuA';
 
-	var map = new mapboxgl.Map({
-  		container: 'map',
-  		style: 'mapbox://styles/hmidaa2002/cjz3ni1566ght1cpdp4i3dn5t'
-  	});
+    $("#menu").append('<div id="pd" style="height:0px"><p>Hover over a cell!</p></div>');
 
-  	map.on('load', function() {
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/hmidaa2002/cjz5460fc0kd01clg09hp0lai',
+        zoom: 10.2,
+        center: [-96.72461651, 43.55143053]
+    });
 
-  	// make a pointer cursor
-    map.getCanvas().style.cursor = 'default';
+    map.on('load', function() {
+        // make a pointer cursor
+        map.getCanvas().style.cursor = 'default';
 
-	var layers = ['Low', 'Medium', 'High'];
-	var colors = ['#FFED9E', '#FD8B3a', '#BD0026'];
+        // make legends
+        var w = 200, h = 45;
+        var key = d3.select("#menu")
+          .append("svg")
+          .attr("width", w)
+          .attr("height", h);
 
-	for (i = 0; i < layers.length; i++) {
-		  var layer = layers[i];
-		  var color = colors[i];
-		  var item = document.createElement('div');
-		  var key = document.createElement('span');
-		  key.className = 'legend-key';
-		  key.style.backgroundColor = color;
+        var legend = key.append("defs")
+          .append("svg:linearGradient")
+          .attr("id", "gradient")
+          .attr("x1", "0%")
+          .attr("y1", "100%")
+          .attr("x2", "100%")
+          .attr("y2", "100%")
+          .attr("spreadMethod", "pad");
 
-		  var value = document.createElement('span');
-		  value.innerHTML = layer;
-		  item.appendChild(key);
-		  item.appendChild(value);
-		  legend.appendChild(item);
-	}
+        legend.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", "#f3ebed")
+          .attr("stop-opacity", 1);
 
-	// change info window on hover
+        legend.append("stop")
+          .attr("offset", "50%")
+          .attr("stop-color", "#c2a0c0")
+          .attr("stop-opacity", 1);
+
+        legend.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", "#5c3366")
+          .attr("stop-opacity", 1);
+
+        key.append("rect")
+          .attr("width", w)
+          .attr("height", h - 30)
+          .style("fill", "url(#gradient)")
+          .attr("transform", "translate(0,0)");
+
+        key.append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(0,30)")
+          .append("text")
+          .attr("y", -4)
+          .attr("x", 0)
+          .text("Low");
+
+        key.append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(0,30)")
+          .append("text")
+          .attr("y", -4)
+          .attr("x", 174)
+          .text("High");
+
+        // Fly to a location
+        var centers = [[-77.01407622, 38.89400438], [-96.72461651, 43.55143053]]
+        var center_current = 0
+
+        document.getElementById('fly').addEventListener('click', function () {
+            map.jumpTo({center: centers[center_current]});
+            //console.log(center_current)
+            center_current++;
+            if(center_current >= centers.length) {
+            center_current = 0;
+            }
+        });
+    });
+
+    // change info window on hover
     map.on('mousemove', function (e) {
         var states = map.queryRenderedFeatures(e.point, {
-            layers: ['level-7-13-area-3-2gflt4']
+            layers: ['level-7-13-area-3-2gflt4', 'level-7-27-area-3-9rp49s']
         });
-
         if (states.length > 0) {
-            document.getElementById('pd').innerHTML = "<h3><p>" + states[0].properties.counts + " map errors</p>";
-        } else {
-            document.getElementById('pd').innerHTML = '<p>Hover over a polygon!</p>';
+            document.getElementById('pd').innerHTML = "<p>" + states[0].properties.counts + " map errors</p>";
+        } 
+        else {
+            document.getElementById('pd').innerHTML = '<p>Hover over a cell!</p>';
         }
     });
-	
-});
-</script>
 
+</script>
 </body>
 </html>
